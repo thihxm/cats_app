@@ -13,12 +13,13 @@ const repository = new ActivityRepository();
 
 const Home = () => {
   const [activities, setActivities] = useState([]);
+  const [time, setTime] = useState(1);
 
-  const create = async () => {
+  const create = async (title, date) => {
     const id = await repository.create({
-      title: "Title Test 3",
+      title: title,
       type: "Type Tes 3",
-      timeStamp: "TimeStamp Test 3",
+      timeStamp: date,
     });
     await all();
   };
@@ -31,6 +32,17 @@ const Home = () => {
   useEffect(() => {
     all();
   }, []);
+
+  useEffect(() => {
+    // Use setTimeout to update the message after 2000 milliseconds (2 seconds)
+    const timeoutId = setTimeout(() => {
+      create(`Activity ${time}`, String(Date.now()));
+      setTime(time + 1);
+    }, 2000);
+
+    // Cleanup function to clear the timeout if the component unmounts
+    return () => clearTimeout(timeoutId);
+  }, []); // Empty dependency array ensures the effect runs only once
 
   return (
     <SafeAreaView className="flex-1 justify-start bg-[#191C4A]">
@@ -48,7 +60,7 @@ const Home = () => {
           <View key={activity.id}>
             <ActivityCard
               title={activity.title}
-              date={activity.timeStamp}
+              date={String(new Date(Number(activity.timeStamp)))}
               icon={icons.bookmark}
             />
           </View>

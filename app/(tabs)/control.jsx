@@ -6,7 +6,7 @@ import { Text, View } from "react-native";
 const Control = () => {
   return (
     <SafeAreaView className="flex-1 items-center bg-[#191C4A]">
-      <View className="h-[350px] bg-gray-200 m-6 rounded-lg w-[90%]"></View>
+      <View className="h-[230px] bg-gray-200 m-6 rounded-lg w-[90%]"></View>
       <View className="flex-1 w-full px-6">
         <CustomButton
           title="LASER ON"
