@@ -1,6 +1,7 @@
 import { Text, TouchableOpacity, View } from "react-native";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
+import Mqtt from "./integration";
 
 // import mqtt from "precompiled-mqtt";
 // import AWSIoT from "aws-iot-device-sdk-v2";
@@ -32,6 +33,7 @@ export default function RootLayout() {
 
   return (
     <View className="flex-1 items-center justify-center bg-[#191C4A]">
+      <Mqtt />
       <Text className="text-white font-bold text-6xl">C.A.T.S.</Text>
       <Link
         href={"/home"}
