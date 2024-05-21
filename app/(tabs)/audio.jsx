@@ -11,6 +11,7 @@ const Audio = () => {
   const [recording, setRecording] = useState(null);
   const [recordingStatus, setRecordingStatus] = useState("idle");
   const [audioPermission, setAudioPermission] = useState(null);
+  const [audioOptions, setAudioOptions] = useState([]);
   useEffect(() => {
     // Simply get recording permission upon first render
     async function getPermission() {
@@ -63,9 +64,9 @@ const Audio = () => {
         console.log("Stopping Recording");
         await recording.stopAndUnloadAsync();
         const recordingUri = recording.getURI();
-
+        const dateNow = Date.now();
         // Create a file name for the recording
-        const fileName = `recording-${Date.now()}.caf`;
+        const fileName = `recording-${dateNow}.caf`;
 
         // Move the recording to the new directory with the new file name
         await FileSystem.makeDirectoryAsync(
@@ -83,6 +84,12 @@ const Audio = () => {
           uri: FileSystem.documentDirectory + "recordings/" + `${fileName}`,
         });
         await playbackObject.playAsync();
+        let newAudio = {
+          title: fileName.split(`.`)[0],
+          url: fileName,
+          id: dateNow,
+        };
+        setAudioOptions([...audioOptions, newAudio]);
 
         // resert our states to record again
         setRecording(null);
@@ -114,7 +121,9 @@ const Audio = () => {
       <AudioRow title={"Sound"} />
       <AudioRow title={"Sound"} />
       <AudioRow title={"Sound"} />
-      {/* <AudioRow title={"Sound"} excludable={true} /> */}
+      {audioOptions?.map((audio) => {
+        <AudioRow title={audio.title} excludable={true} />;
+      })}
       <View className="flex-row p-8">
         <CustomButton
           handlePress={handleRecordButtonPress}
@@ -124,7 +133,6 @@ const Audio = () => {
           containerStyles={"flex justify-center w-full bg-terciary p-3"}
         />
       </View>
-      {/* <Text>{`Recording status: ${recordingStatus}`}</Text> */}
     </SafeAreaView>
   );
 };
