@@ -59,6 +59,7 @@ class AWSCognitoCredentialsProvider extends auth.CredentialsProvider {
 
   async refreshCredentials() {
     log("Fetching Cognito credentials");
+    console.log("Fetching Cognito Credentials");
     this.cachedCredentials = await fromCognitoIdentityPool({
       // Required. The unique identifier for the identity pool from which an identity should be
       // retrieved or generated.

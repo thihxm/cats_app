@@ -10,7 +10,7 @@ import {
 import { useState } from "react";
 
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { Picker } from "@react-native-picker/picker";
+// import { Picker } from "@react-native-picker/picker";
 
 const ScheduleRow = ({ title, icon }) => {
   const [selectedRepeatTime, setSelectedRepeatTime] = useState();
@@ -94,8 +94,11 @@ const ScheduleRow = ({ title, icon }) => {
       </View>
       <View className="grid gap-2 mt-2 ml-4">
         {scheduleTime?.map((item) => (
-          <View className="p-3 bg-terciary mr-16 rounded-lg flex flex-row items-center justify-between">
-            <Text className="text-[14px] text-white ">
+          <View
+            id={item.id}
+            className="p-3 bg-terciary mr-16 rounded-lg flex flex-row items-center justify-between"
+          >
+            <Text className="text-[14px] text-white">
               {title} - {item.time}
             </Text>
             <TouchableOpacity
