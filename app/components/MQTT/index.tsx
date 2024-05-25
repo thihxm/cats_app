@@ -1,23 +1,27 @@
+/**
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0.
+ */
+//import '../shim'
 import { useEffect } from "react";
 import { mqtt5, auth, iot } from "aws-iot-device-sdk-v2";
+import { ReadableStream } from "web-streams-polyfill/ponyfill/es6";
+globalThis.ReadableStream = ReadableStream;
 import { once } from "events";
+import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { CognitoIdentityCredentials } from "@aws-sdk/credential-provider-cognito-identity/dist-types/fromCognitoIdentity";
 import { toUtf8 } from "@aws-sdk/util-utf8-browser";
-const { fromCognitoIdentityPool } = require("@aws-sdk/credential-providers");
-
+import { View, Button, Text } from "react-native";
 // @ts-ignore
 import {
   AWS_REGION,
   AWS_COGNITO_IDENTITY_POOL_ID,
   AWS_IOT_ENDPOINT,
 } from "./settings";
-import jquery from "jquery";
-import { Button, Text, TouchableHighlight, View } from "react-native";
-const $: JQueryStatic = jquery;
 
 function log(msg: string) {
   let now = new Date();
-  $("#message").append(`<pre>${now.toString()}: ${msg}</pre>`);
+  console.log(`${now.toString()}: ${msg}`);
 }
 
 /**
@@ -48,7 +52,7 @@ class AWSCognitoCredentialsProvider extends auth.CredentialsProvider {
     }, expire_interval_in_ms ?? 3600 * 1000);
   }
 
-  getCredentials(): auth.AWSCredentials {
+  getCredentials() {
     return {
       aws_access_id: this.cachedCredentials?.accessKeyId ?? "",
       aws_secret_key: this.cachedCredentials?.secretAccessKey ?? "",
@@ -59,13 +63,13 @@ class AWSCognitoCredentialsProvider extends auth.CredentialsProvider {
 
   async refreshCredentials() {
     log("Fetching Cognito credentials");
-    console.log("Fetching Cognito Credentials");
     this.cachedCredentials = await fromCognitoIdentityPool({
       // Required. The unique identifier for the identity pool from which an identity should be
       // retrieved or generated.
       identityPoolId: this.options.IdentityPoolId,
       clientConfig: { region: this.options.Region },
     })();
+    console.log(this.cachedCredentials);
   }
 }
 
@@ -127,11 +131,10 @@ function createClient(
   return client;
 }
 
-function Mqtt() {
+function Mqtt5() {
   var client: mqtt5.Mqtt5Client;
   var user_msg_count = 0;
-  const qos0Topic = "/test/qos0";
-  const qos1Topic = "/test/qos1";
+  const qos0Topic = "/teste";
 
   async function testSuccessfulConnection() {
     /** Set up the credentialsProvider */
@@ -153,31 +156,23 @@ function Mqtt() {
     await connectionSuccess;
 
     const suback = await client.subscribe({
-      subscriptions: [
-        { qos: mqtt5.QoS.AtLeastOnce, topicFilter: qos1Topic },
-        { qos: mqtt5.QoS.AtMostOnce, topicFilter: qos0Topic },
-      ],
+      subscriptions: [{ qos: mqtt5.QoS.AtLeastOnce, topicFilter: qos0Topic }],
     });
     log("Suback result: " + JSON.stringify(suback));
 
     const qos0PublishResult = await client.publish({
-      qos: mqtt5.QoS.AtMostOnce,
+      qos: mqtt5.QoS.AtLeastOnce,
       topicName: qos0Topic,
       payload: "This is a qos 0 payload",
     });
     log("QoS 0 Publish result: " + JSON.stringify(qos0PublishResult));
-
-    const qos1PublishResult = await client.publish({
-      qos: mqtt5.QoS.AtLeastOnce,
-      topicName: qos1Topic,
-      payload: "This is a qos 1 payload",
-    });
-    log("QoS 1 Publish result: " + JSON.stringify(qos1PublishResult));
-
-    let unsuback = await client.unsubscribe({
-      topicFilters: [qos0Topic],
-    });
-    log("Unsuback result: " + JSON.stringify(unsuback));
+    /*
+        let unsuback = await client.unsubscribe({
+            topicFilters: [
+                qos0Topic
+            ]
+        });
+        log('Unsuback result: ' + JSON.stringify(unsuback));*/
   }
 
   useEffect(() => {
@@ -189,8 +184,10 @@ function Mqtt() {
     const publishResult = await client
       .publish({
         qos: mqtt5.QoS.AtLeastOnce,
-        topicName: qos1Topic,
-        payload: msg,
+        topicName: qos0Topic,
+        payload: {
+          msg,
+        },
       })
       .then(() => {
         log("Button Clicked, Publish result: " + JSON.stringify(publishResult));
@@ -212,19 +209,18 @@ function Mqtt() {
   }
 
   return (
-    <View>
+    <>
       <View>
-        <TouchableHighlight onPress={() => PublishMessage()}>
-          <Text>Publish A Message</Text>
-        </TouchableHighlight>
+        <Button title="Publish A Message" onPress={() => PublishMessage()} />
       </View>
       <View>
-        <TouchableHighlight onPress={() => CloseConnection()}>
-          <Text>Disconnect</Text>
-        </TouchableHighlight>
+        <Button title="Disconnect" onPress={() => CloseConnection()} />
       </View>
-    </View>
+      <View id="message">
+        <Text>Mqtt5 Pub Sub Sample</Text>
+      </View>
+    </>
   );
 }
 
-export default Mqtt;
+export default Mqtt5;

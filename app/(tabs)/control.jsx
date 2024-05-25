@@ -2,12 +2,14 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomButton from "../components/CustomButton";
 import { Text, View } from "react-native";
+import Mqtt5 from "../components/MQTT";
 
 const Control = () => {
   return (
     <SafeAreaView className="flex-1 items-center bg-[#191C4A]">
       <View className="h-[230px] bg-gray-200 m-6 rounded-lg w-[90%]"></View>
       <View className="flex-1 w-full px-6">
+        <Mqtt5 />
         <CustomButton
           title="LASER ON"
           isLoading={false}
