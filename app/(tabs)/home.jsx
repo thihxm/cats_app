@@ -8,13 +8,20 @@ import ActivityCard from "../components/ActivityCard";
 import { icons } from "../../constants";
 import { useEffect, useState } from "react";
 import ActivityRepository from "../database/ActivityRepository";
+import useMQTT from "../components/MQTT";
+import { commandTopic } from "../components/MQTT/commands";
 
 const repository = new ActivityRepository();
 
 const Home = () => {
   const [activities, setActivities] = useState([]);
   const [time, setTime] = useState(1);
+  const [waterTemperature, setWaterTemperature] = useState("");
+  const [waterLevel, setWaterLevel] = useState("");
+  const [snacksLevel, setSnacksLevel] = useState("");
+  const [launcherAvailable, setLauncherAvailable] = useState("");
 
+  const mqtt = useMQTT();
   const create = async (title, date) => {
     const id = await repository.create({
       title: title,
@@ -44,13 +51,24 @@ const Home = () => {
     return () => clearTimeout(timeoutId);
   }, []); // Empty dependency array ensures the effect runs only once
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSnacksLevel(mqtt.SubscribeToTopic(commandTopic.alertSnacksLevel));
+      setWaterTemperature(mqtt.SubscribeToTopic(commandTopic.alertTemperature));
+      setWaterLevel(mqtt.SubscribeToTopic(commandTopic.alertWaterLevel));
+      setLauncherAvailable(
+        mqtt.SubscribeToTopic(commandTopic.waterTemperature)
+      );
+    }, 60 * 5 * 1000);
+    return () => clearTimeout(timeoutId);
+  }, []);
   return (
     <SafeAreaView className="flex-1 justify-start bg-[#191C4A]">
       <Header />
-      <WaterStatus />
+      <WaterStatus level={waterLevel} temperature={waterTemperature} />
       <View className="flex-row w-full justify-between pr-2">
-        <StatusCard title={"Ball Launcher"} ammount={"2/4"} />
-        <StatusCard title={"Snack Dispenser"} ammount={"OK"} />
+        <StatusCard title={"Ball Launcher"} ammount={launcherAvailable} />
+        <StatusCard title={"Snack Dispenser"} ammount={snacksLevel} />
       </View>
       <Text className="p-3 pl-5 mt-0 text-2xl font-semibold text-white">
         Recent Activities

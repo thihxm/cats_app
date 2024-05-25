@@ -176,19 +176,19 @@ function useMQTT() {
         log('Unsuback result: ' + JSON.stringify(unsuback));*/
   }
 
-  async function subscribeToTopic(topic: string) {
-    await client.subscribe({
+  async function SubscribeToTopic(topic: string) {
+    return await client.subscribe({
       subscriptions: [{ qos: mqtt5.QoS.AtLeastOnce, topicFilter: topic }],
     });
   }
 
-  function initialSubscribeConfig() {
-    commandTopic.map((topic: string) => subscribeToTopic(topic));
-  }
+  // function initialSubscribeConfig() {
+  //   commandTopic.map((topic: string) => subscribeToTopic(topic));
+  // }
 
   useEffect(() => {
     testSuccessfulConnection(); //initial execution
-    initialSubscribeConfig();
+    // initialSubscribeConfig();
   }, []);
 
   async function PublishMessage(topicName: string, msg: string) {
@@ -218,7 +218,7 @@ function useMQTT() {
     await stopped;
   }
 
-  return { PublishMessage };
+  return { PublishMessage, SubscribeToTopic };
 }
 
 export default useMQTT;
