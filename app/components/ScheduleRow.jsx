@@ -10,13 +10,16 @@ import {
 import { useState } from "react";
 
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import useMQTT from "./MQTT";
+import { commandTopic } from "./MQTT/commands";
 // import { Picker } from "@react-native-picker/picker";
 
-const ScheduleRow = ({ title, icon }) => {
+const ScheduleRow = ({ title, icon, commandId }) => {
   const [selectedRepeatTime, setSelectedRepeatTime] = useState();
   const [selectedTime, setSelectedTime] = useState();
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [scheduleTime, setScheduleTime] = useState([]);
+  const mqtt = useMQTT();
   const showDatePicker = () => {
     setDatePickerVisibility(true);
   };
@@ -32,10 +35,22 @@ const ScheduleRow = ({ title, icon }) => {
       ...scheduleTime,
       { id: scheduleTime.length + 1, time: selectedTime },
     ]);
+    mqtt.PublishMessage(
+      commandTopic.setSchedule,
+      commandId + ":" + selectedTime.replaceAll(":", "")
+    );
   };
   const handleDeleteSchedule = (id) => {
     let newArray = scheduleTime.filter((item) => item.id !== id);
     setScheduleTime(newArray);
+    mqtt.PublishMessage(
+      commandTopic.delSchedule,
+      commandId +
+        ":" +
+        scheduleTime
+          .filter((item) => item.id === id)[0]
+          .time.replaceAll(":", "")
+    );
   };
 
   return (

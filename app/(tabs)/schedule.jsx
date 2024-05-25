@@ -2,6 +2,7 @@ import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ScheduleRow from "../components/ScheduleRow";
 import { icons } from "../../constants";
+import { scheduleId } from "../components/MQTT/commands";
 
 const Schedule = () => {
   return (
@@ -10,14 +11,22 @@ const Schedule = () => {
         <Text className="text-white text-2xl">Schedule Configuration</Text>
       </View>
       <View className="items-center">
-        <ScheduleRow title={"Ball Launcher"} icon={icons.leftArrow} />
+        <ScheduleRow
+          title={"Ball Launcher"}
+          icon={icons.leftArrow}
+          commandId={scheduleId.snackDispenser}
+        />
       </View>
       <View className="items-center">
-        <ScheduleRow title={"Snack Dispenser"} icon={icons.plus} />
+        <ScheduleRow
+          title={"Snack Dispenser"}
+          icon={icons.plus}
+          commandId={scheduleId.snackDispenser}
+        />
       </View>
-      <View className="items-center">
+      {/* <View className="items-center">
         <ScheduleRow title={"Sound Player"} icon={icons.play} />
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 };

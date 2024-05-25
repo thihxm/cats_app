@@ -18,6 +18,7 @@ import {
   AWS_COGNITO_IDENTITY_POOL_ID,
   AWS_IOT_ENDPOINT,
 } from "./settings";
+import { commandTopic } from "./commands";
 
 function log(msg: string) {
   let now = new Date();
@@ -131,7 +132,7 @@ function createClient(
   return client;
 }
 
-function Mqtt5() {
+function useMQTT() {
   var client: mqtt5.Mqtt5Client;
   var user_msg_count = 0;
   const qos0Topic = "/teste";
@@ -175,16 +176,26 @@ function Mqtt5() {
         log('Unsuback result: ' + JSON.stringify(unsuback));*/
   }
 
+  async function subscribeToTopic(topic: string) {
+    await client.subscribe({
+      subscriptions: [{ qos: mqtt5.QoS.AtLeastOnce, topicFilter: topic }],
+    });
+  }
+
+  function initialSubscribeConfig() {
+    commandTopic.map((topic: string) => subscribeToTopic(topic));
+  }
+
   useEffect(() => {
     testSuccessfulConnection(); //initial execution
+    initialSubscribeConfig();
   }, []);
 
-  async function PublishMessage() {
-    const msg = `BUTTON CLICKED {${user_msg_count}}`;
+  async function PublishMessage(topicName: string, msg: string) {
     const publishResult = await client
       .publish({
         qos: mqtt5.QoS.AtLeastOnce,
-        topicName: qos0Topic,
+        topicName: topicName,
         payload: {
           msg,
         },
@@ -195,9 +206,8 @@ function Mqtt5() {
       .catch((error) => {
         log(`Error publishing: ${error}`);
       });
-    user_msg_count++;
   }
-
+  async function ListenMessage(topicName: string) {}
   async function CloseConnection() {
     const disconnection = once(client, "disconnection");
     const stopped = once(client, "stopped");
@@ -208,19 +218,7 @@ function Mqtt5() {
     await stopped;
   }
 
-  return (
-    <>
-      <View>
-        <Button title="Publish A Message" onPress={() => PublishMessage()} />
-      </View>
-      <View>
-        <Button title="Disconnect" onPress={() => CloseConnection()} />
-      </View>
-      <View id="message">
-        <Text>Mqtt5 Pub Sub Sample</Text>
-      </View>
-    </>
-  );
+  return { PublishMessage };
 }
 
-export default Mqtt5;
+export default useMQTT;
