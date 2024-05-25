@@ -1,4 +1,4 @@
-import { ReactNativeJoystick } from "@korsolutions/react-native-joystick";
+// import { ReactNativeJoystick } from "@korsolutions/react-native-joystick";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomButton from "../components/CustomButton";
 import { Text, View } from "react-native";
@@ -35,7 +35,7 @@ const Control = () => {
         </View>
       </View>
       <View className="p-5">
-        <ReactNativeJoystick color="#09C3B8" radius={75} />
+        {/* <ReactNativeJoystick color="#09C3B8" radius={75} /> */}
       </View>
     </SafeAreaView>
   );
