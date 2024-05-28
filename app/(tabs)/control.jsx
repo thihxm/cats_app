@@ -1,22 +1,24 @@
-// import { ReactNativeJoystick } from "@korsolutions/react-native-joystick";
+import { ReactNativeJoystick } from "@korsolutions/react-native-joystick";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomButton from "../components/CustomButton";
 import { Text, View } from "react-native";
-import Mqtt5 from "../components/MQTT";
 import useMQTT from "../components/MQTT";
+import { commandTopic } from "../components/MQTT/commands";
 
 const Control = () => {
-  const mqtt = useMQTT();
+  const { PublishMessage } = useMQTT();
+  const publishTopic = (topic, msg) => {
+    PublishMessage(topic, msg);
+  }
   return (
     <SafeAreaView className="flex-1 items-center bg-[#191C4A]">
       <View className="h-[230px] bg-gray-200 m-6 rounded-lg w-[90%]"></View>
       <View className="flex-1 w-full px-6">
-        <Mqtt5 />
         <CustomButton
           title="LASER ON"
           isLoading={false}
           containerStyles={"w-full bg-terciary h-12"}
-          handlePress={mqtt.PublishMessage(
+          handlePress={() => publishTopic(
             commandTopic.laserOnOff,
             "switch laser"
           )}
@@ -27,14 +29,14 @@ const Control = () => {
             isLoading={false}
             containerStyles={"w-[30%] bg-terciary h-12"}
             textStyles={"text-[12px]"}
-            handlePress={mqtt.PublishMessage(commandTopic.soundPlay, "someId")}
+            handlePress={() => publishTopic(commandTopic.soundPlay, "someId")}
           />
           <CustomButton
             title="THROW BALL"
             isLoading={false}
             containerStyles={"w-[30%] bg-terciary h-12"}
             textStyles={"text-[12px]"}
-            handlePress={mqtt.PublishMessage(
+            handlePress={() => publishTopic(
               commandTopic.ballLaunch,
               "request a ball"
             )}
@@ -44,7 +46,7 @@ const Control = () => {
             isLoading={false}
             containerStyles={"w-[30%] bg-terciary h-12"}
             textStyles={"text-[12px]"}
-            handlePress={mqtt.PublishMessage(
+            handlePress={() => publishTopic(
               commandTopic.dropSnacks,
               "request to drop some snacks"
             )}
@@ -56,7 +58,7 @@ const Control = () => {
           color="#09C3B8"
           radius={75}
           onMove={(data) =>
-            mqtt.PublishMessage(
+            publishTopic(
               commandTopic.laserPosition,
               JSON.stringify(data)
             )

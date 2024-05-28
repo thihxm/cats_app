@@ -18,6 +18,12 @@ export default class ActivityRepository {
     );
   }
 
+  public async clear() {
+    await executeTransaction(
+      "DELETE FROM activities"
+    );
+  }
+
   public async down() {
     await executeTransaction("DROP TABLE activities");
   }

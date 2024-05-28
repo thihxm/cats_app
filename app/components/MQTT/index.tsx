@@ -18,11 +18,13 @@ import {
   AWS_COGNITO_IDENTITY_POOL_ID,
   AWS_IOT_ENDPOINT,
 } from "./settings";
-import { commandTopic } from "./commands";
+import { alertTitle, alertTopic } from "./commands";
+import { useAlertStore } from "./store";
+import ActivityRepository from "../../database/ActivityRepository";
 
 function log(msg: string) {
   let now = new Date();
-  console.log(`${now.toString()}: ${msg}`);
+  // console.log(`${now.toString()}: ${msg}`);
 }
 
 /**
@@ -33,6 +35,7 @@ interface AWSCognitoCredentialOptions {
   Region: string;
 }
 
+const repository = new ActivityRepository();
 /**
  * AWSCognitoCredentialsProvider. The AWSCognitoCredentialsProvider implements AWS.CognitoIdentityCredentials.
  *
@@ -70,7 +73,7 @@ class AWSCognitoCredentialsProvider extends auth.CredentialsProvider {
       identityPoolId: this.options.IdentityPoolId,
       clientConfig: { region: this.options.Region },
     })();
-    console.log(this.cachedCredentials);
+    // console.log(this.cachedCredentials);
   }
 }
 
@@ -136,6 +139,21 @@ function useMQTT() {
   var client: mqtt5.Mqtt5Client;
   var user_msg_count = 0;
   const qos0Topic = "/teste";
+  const alertStore = useAlertStore();
+
+  const create = async (title: string, type: string) => {
+    const date = String(Date.now());
+    await repository.create({
+      title: title,
+      type: type,
+      timeStamp: date,
+    });
+  };
+
+  const updateAll = async () => {
+    const activities = await repository.all();
+    alertStore.setActivities(activities);
+  };
 
   async function testSuccessfulConnection() {
     /** Set up the credentialsProvider */
@@ -174,6 +192,8 @@ function useMQTT() {
             ]
         });
         log('Unsuback result: ' + JSON.stringify(unsuback));*/
+      ListenMessage();
+      initialSubscribeConfig();
   }
 
   async function SubscribeToTopic(topic: string) {
@@ -182,14 +202,32 @@ function useMQTT() {
     });
   }
 
-  // function initialSubscribeConfig() {
-  //   commandTopic.map((topic: string) => subscribeToTopic(topic));
-  // }
+  function initialSubscribeConfig() {
+    Object.values(alertTopic).map((topic: string) => SubscribeToTopic(topic));
+  }
 
-  useEffect(() => {
-    testSuccessfulConnection(); //initial execution
-    // initialSubscribeConfig();
-  }, []);
+  async function ListenMessage() {
+    if(client)
+      client.on("messageReceived",(eventData: mqtt5.MessageReceivedEvent) : void => {
+        log("Message Received event: " + JSON.stringify(eventData.message));
+        const msg = toUtf8(eventData.message.payload as Buffer);
+        const eventTopic = eventData.message.topicName;
+
+        if(Object.values(alertTopic).some((command) => command === eventTopic)) {
+          const tMsg = JSON.stringify(msg).replaceAll(/"/g, "");
+          if(tMsg !== "" && tMsg) {
+            let newStatus = alertStore.alertStatus;
+            newStatus[eventTopic.replace("/","")] = tMsg;
+            alertStore.setAlertStatus(newStatus);
+            create(alertTitle[eventTopic.replace("/","")] + tMsg,eventTopic.replace("/",""))
+            updateAll();
+          }
+        }
+        if (eventData.message.payload) {
+            log("  with payload: " + toUtf8(eventData.message.payload as Buffer));
+        }
+    });
+  }
 
   async function PublishMessage(topicName: string, msg: string) {
     const publishResult = await client
@@ -207,7 +245,13 @@ function useMQTT() {
         log(`Error publishing: ${error}`);
       });
   }
-  async function ListenMessage(topicName: string) {}
+
+  useEffect(() => {
+    testSuccessfulConnection(); //initial execution
+  }, []);
+
+  
+  
   async function CloseConnection() {
     const disconnection = once(client, "disconnection");
     const stopped = once(client, "stopped");
@@ -218,7 +262,7 @@ function useMQTT() {
     await stopped;
   }
 
-  return { PublishMessage, SubscribeToTopic };
+  return { ListenMessage, PublishMessage, SubscribeToTopic };
 }
 
 export default useMQTT;
