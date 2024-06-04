@@ -1,3 +1,11 @@
+import React, {useState} from 'react';
+import {
+  Button,
+  SafeAreaView,
+  StyleSheet,
+  View,
+  StatusBar,
+} from 'react-native';
 import { mediaDevices, RTCView } from "react-native-webrtc";
 
 export const WebRTC = () => {
@@ -31,8 +39,25 @@ export const WebRTC = () => {
           <Button title="Start" onPress={start} />
           <Button title="Stop" onPress={stop} />
         </View>
-      </SafeAreaView>{" "}
+      </SafeAreaView>
       {stream && <RTCView streamURL={stream.toURL()} />}
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  body: {
+    backgroundColor: '#fff',
+    ...StyleSheet.absoluteFill
+  },
+  stream: {
+    flex: 1
+  },
+  footer: {
+    backgroundColor: '#ff0000',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0
+  },
+});
